@@ -1,70 +1,79 @@
 /*
-   Código para el control de la iluminación con arduino
-   Autor: Daniel Mauricio Pineda Tobón
+   Code for control of LED light in MEDUSA
+   Author: Daniel Mauricio Pineda Tobón
    Version: 1.0
-   Fecha: 13042020
+   Date: 13042020
 */
 
-String strPuerto = ""; // Almacena el texto que indica el puerto que se debe activar
-boolean strCompleto = false;
-int LEDstate = LOW; // Indicara si se enciende o se apaga el LED
-int LED = 0;
-float inten = 100; // Valor de intensidad para los LEDs
-
-// Longitud del arreglo
-#define ARRAYSIZE 22
-int Puerto[] = {22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50};
-// Vector con el porcentaje de tiempo activo de cada LED
+// The following vector has the percentage of time the port will be activated in a PWM signal
+// Modify the values according to your needs, however keep the number of elements on the array
 float Porcen[] = {100, 100, 70, 100, 65, 100, 100, 40, 30, 30, 45, 25, 100, 100, 30};
 //############### L0   L1   L2  L3   L4  L5   L6   L7  L8  L9  L10 L11 L12  L13  L14
 
+
+// #######################################################################################
+
+// ###################### Do not modify anything from here on ############################
+
+// #######################################################################################
+
+// The following vector has the names of the Arduino MEGA ports used for switching the LEDs
+int Puerto[] = {22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50};
+
+String strPuerto = ""; // This stores a text indicating the port
+boolean strCompleto = false;
+int LEDstate = LOW; // This indicates if the LED is activated or not
+int LED = 0;
+float inten = 100; // This indicates a value of intensity in PWM
+
 // Para el PWM
-float periodo = 200; // En microsegundos
+float periodo = 200; // This is a value for the PWM period in microseconds
 int tEnc = 0;
 int tApa = 0;
 
 void setup() {
   Serial.begin(9600);
+  // This routine simply configures the different ports as outputs
   for (int i = 0; i < 22; i++) {
     pinMode(Puerto[i], OUTPUT);
   }
-  //Reservamos unos 10 bytes para el texto que se recibe
+  //10 bytes will be reserved for the incomming string
   strPuerto.reserve(10);
 }
 
 void loop() {
   if (strCompleto == true && LEDstate == HIGH) {
-    LED = strPuerto.toInt(); // Convierto el dato recibido en entero
-    strPuerto = ""; // Reinicio la variable que almacena los datos recibidos
-    strCompleto = false; // Reinicio la variable que indica si se termino de recibir datos
+    LED = strPuerto.toInt(); // The incomming string is converted to an int
+    strPuerto = ""; // Reseting the variable
+    strCompleto = false; // Reseting the variable
     Serial.print("LED");
     Serial.print(LED);
     Serial.print("ON");
     Serial.print("\r\n");
-    if (LED == 100) apagarTodo();
+    if (LED == 100) apagarTodo(); // This function turns off all the LEDs
     pwmPin(Puerto[LED], Porcen[LED], periodo);
   }
   if (strCompleto == true && LEDstate == LOW) {
-    LED = strPuerto.toInt(); // Convierto el dato recibido en entero
-    strPuerto = ""; // Reinicio la variable que almacena los datos recibidos
-    strCompleto = false; // Reinicio la variable que indica si se termino de recibir datos
+    LED = strPuerto.toInt(); // Converting the incomming data to int
+    strPuerto = ""; // Reseting the variable
+    strCompleto = false; // Reseting the variable
     Serial.println("ALL OFF");
-    apagarTodo();
+    apagarTodo(); // This function turns off all the LEDs
   }
 }
 
 void serialEvent() {
   while (Serial.available()) {
-    // Tomamos el caracter que entró
+    // Capturing the incomming character
     char inChar = (char)Serial.read();
-    // Añadimos el caracter al string
+    // This character is added to the port string
     strPuerto += inChar;
-    // Si el caracter que se recibe es una nueva linea
-    // significa que finalizo. (Condicion para Python).
-    if (inChar == 'H' || inChar == 'h') {
+    // If the received character is a new line
+    // it means that it finished. (Condition for Python).
+    if (inChar == 'H' || inChar == 'h') { // If one of the incomming chars is H or h then the LED is on
       strCompleto = true;
       LEDstate = HIGH;
-    } else if (inChar == 'L' || inChar == "l") {
+    } else if (inChar == 'L' || inChar == "l") { // If one of the chars is L or l then the LED is off
       strCompleto = true;
       LEDstate = LOW;
     }
@@ -92,8 +101,8 @@ void pwmPin(int pin, float porc, int periodo) {
       char inChar = (char)Serial.read();
       // Añadimos el caracter al string
       strPuerto += inChar;
-      // Si el caracter que se recibe es una nueva línea
-      // significa que finalizo. (Condicion para Python).
+      // If the received character is a new line
+      // it means that it finished. (Condition for Python).
       if (inChar == 'L' || inChar == 'l') {
         strCompleto = true;
         LEDstate = LOW;
